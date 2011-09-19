@@ -19,6 +19,7 @@ module Bundler
 
     def default_gemfile
       gemfile = find_gemfile
+      puts caller
       raise GemfileNotFound, "Could not locate Gemfile" unless gemfile
       Pathname.new(gemfile)
     end
