@@ -1,4 +1,5 @@
 require 'bundler/vendored_persistent'
+require 'securerandom'
 
 module Bundler
   # Handles all the fetching with the rubygems server
@@ -62,7 +63,8 @@ module Bundler
             engine_version = ruby.engine_version rescue "???"
             agent += " #{ruby.engine}/#{engine_version}"
           end
-          agent
+          # add a random ID so we can consolidate runs server-side
+          agent << " " << SecureRandom.hex(8)
         end
       end
 
