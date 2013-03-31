@@ -9,14 +9,21 @@ module Bundler
       :locked_deps
 
     def self.build(gemfile, lockfile, unlock)
-      unlock ||= {}
       gemfile = Pathname.new(gemfile).expand_path
 
       unless gemfile.file?
         raise GemfileNotFound, "#{gemfile} not found"
       end
 
-      Dsl.evaluate(gemfile, lockfile, unlock)
+      evaled = Dsl.new.eval_gemfile(gemfile)
+
+      new(
+        lockfile,
+        evaled.dependencies,
+        evaled.sources,
+        unlock,
+        evaled.ruby_version
+      )
     end
 
 =begin
@@ -32,13 +39,15 @@ module Bundler
 =end
 
     def initialize(lockfile, dependencies, sources, unlock, ruby_version = nil)
-      @unlocking = unlock == true || !unlock.empty?
-
-      @dependencies, @sources, @unlock = dependencies, sources, unlock
+      @dependencies      = dependencies
+      @sources           = sources
+      @unlock            = unlock || {}
       @remote            = false
       @specs             = nil
       @lockfile_contents = ""
       @ruby_version      = ruby_version
+
+      @unlocking = @unlock == true || !@unlock.empty?
 
       if lockfile && File.exists?(lockfile)
         @lockfile_contents = Bundler.read_file(lockfile)

@@ -53,7 +53,7 @@ describe Bundler::Dsl do
   describe "syntax errors" do
     it "raise a Bundler::GemfileError" do
       gemfile "gem 'foo', :path => /unquoted/string/syntax/error"
-      expect { Bundler::Dsl.evaluate(bundled_app("Gemfile"), nil, true) }.
+      expect { Bundler::Dsl.new.eval_gemfile(bundled_app("Gemfile")) }.
         to raise_error(Bundler::GemfileError)
     end
   end

@@ -4,12 +4,6 @@ module Bundler
   class Dsl
     include RubyDsl
 
-    def self.evaluate(gemfile, lockfile, unlock)
-      builder = new
-      builder.eval_gemfile(gemfile)
-      builder.to_definition(lockfile, unlock)
-    end
-
     VALID_PLATFORMS = Bundler::Dependency::PLATFORM_MAP.keys.freeze
 
     attr_accessor :dependencies
@@ -28,6 +22,7 @@ module Bundler
     def eval_gemfile(gemfile, contents = nil)
       contents ||= Bundler.read_file(gemfile.to_s)
       instance_eval(contents, gemfile.to_s, 1)
+      self
     rescue SyntaxError => e
       bt = e.message.split("\n")[1..-1]
       raise GemfileError, ["Gemfile syntax error:", *bt].join("\n")
@@ -149,9 +144,16 @@ module Bundler
       source Source::Git.new(_normalize_hash(options).merge("uri" => uri)), source_options, &blk
     end
 
-    def to_definition(lockfile, unlock)
-      @sources << @rubygems_source unless @sources.include?(@rubygems_source)
-      Definition.new(lockfile, @dependencies, @sources, unlock, @ruby_version)
+    def sources
+      if @sources.include?(@rubygems_source)
+        @sources
+      else
+        @sources + [@rubygems_source]
+      end
+    end
+
+    def ruby_version
+      @ruby_version
     end
 
     def group(*args, &blk)
